@@ -4,91 +4,91 @@
 
 # Qanvas
 
-Estudio local para generar y editar imágenes con IA sobre **Qwen-Image-2.1**: texto a imagen, editor con marcas y máscaras, stickers con fondo transparente, memes, fotos grupales, mejorador de prompts y ampliación 2×. Todo corre en tu PC con Docker: las imágenes y fotos no salen de tu equipo.
+A local studio to generate and edit images with AI on top of **Qwen-Image-2.1**: text to image, an editor with annotations and masks, stickers with transparent backgrounds, memes, group photos, a prompt enhancer and 2× upscaling. Everything runs on your PC with Docker: your images and photos never leave your machine.
 
-## Requisitos
+## Requirements
 
-| | Mínimo |
+| | Minimum |
 |---|---|
-| GPU | NVIDIA con **12 GB de VRAM** (probado con RTX 3060) y driver reciente |
+| GPU | NVIDIA with **12 GB of VRAM** (tested on an RTX 3060) and a recent driver |
 | RAM | 32 GB |
-| Disco | ~45 GB libres (27 GB de modelos + imágenes de Docker) |
-| Software | **Windows:** Docker Desktop con WSL2 · **Linux:** Docker + Compose v2 + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
+| Disk | ~45 GB free (27 GB of models + Docker images) |
+| Software | **Windows:** Docker Desktop with WSL2 · **Linux:** Docker + Compose v2 + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
 
-## Instalación (un comando)
+## Installation (one command)
 
 ```bash
-git clone <url-del-repo> qanvas && cd qanvas
+git clone https://github.com/arekucr/Qanvas.git && cd Qanvas
 ```
 
-- **Windows:** doble clic en `setup.cmd` (o ejecútalo en una terminal).
+- **Windows:** double-click `setup.cmd` (or run it from a terminal).
 - **Linux / WSL:** `./setup.sh`
 
-El setup comprueba Docker y la GPU, crea `.env`, descarga los modelos (~27 GB, se puede cortar y reanudar), construye las imágenes, arranca todo y espera a que los modelos queden precargados. Al terminar abre **http://localhost:3000**.
+The setup checks Docker and the GPU, creates `.env`, downloads the models (~27 GB, can be interrupted and resumed), builds the images, starts everything and waits until the models are preloaded. When it finishes it opens **http://localhost:3000**.
 
-Se puede volver a correr cuando quieras: salta lo que ya está hecho.
+You can run it again at any time: it skips whatever is already done.
 
-### Windows: memoria de WSL2
+### Windows: WSL2 memory
 
-Docker Desktop usa por defecto la mitad de la RAM. Con 32 GB conviene fijarla en 20 GB para que los modelos quepan y Windows siga fluido. Crea `%USERPROFILE%\.wslconfig`:
+Docker Desktop uses half of your RAM by default. With 32 GB it's best to cap it at 20 GB so the models fit and Windows stays responsive. Create `%USERPROFILE%\.wslconfig`:
 
 ```ini
 [wsl2]
 memory=20GB
 ```
 
-y reinicia Docker Desktop (o ejecuta `wsl --shutdown`).
+and restart Docker Desktop (or run `wsl --shutdown`).
 
-## Configuración (`.env`)
+## Configuration (`.env`)
 
-| Variable | Por defecto | Para qué sirve |
+| Variable | Default | What it does |
 |---|---|---|
-| `COMFY_GPU` | `0` | GPU que genera las imágenes |
-| `LLM_GPU` | `0` | GPU del mejorador de prompts. Si es la misma que `COMFY_GPU`, se turnan la tarjeta |
-| `APP_PORT` | `3000` | Puerto de la web |
-| `RETENTION_HOURS` | `24` | Horas que se guardan las imágenes antes de borrarse solas |
-| `COMFY_ARGS` | `--disable-pinned-memory` | Argumentos de ComfyUI (con 64 GB de RAM puedes quitarlo) |
+| `COMFY_GPU` | `0` | GPU that generates the images |
+| `LLM_GPU` | `0` | GPU for the prompt enhancer. If it's the same as `COMFY_GPU`, they take turns on the card |
+| `APP_PORT` | `3000` | Web app port |
+| `RETENTION_HOURS` | `24` | Hours images are kept before they are deleted automatically |
+| `COMFY_ARGS` | `--disable-pinned-memory` | ComfyUI arguments (with 64 GB of RAM you can remove it) |
 
-Después de cambiar `.env`: `docker compose up -d`.
+After changing `.env`: `docker compose up -d`.
 
-### Con dos GPUs
+### With two GPUs
 
-Por defecto todo usa una sola GPU: al pulsar «Mejorar prompt», Qanvas libera la tarjeta, corre el mejorador y la devuelve (la siguiente imagen tarda ~20 s más en cargar modelos). Si tienes una segunda GPU de 8 GB o más, pon `LLM_GPU=1` en `.env`: el mejorador queda cargado en ella y trabaja en paralelo con la generación.
+By default everything runs on a single GPU: when you press "Improve prompt", Qanvas frees the card, runs the enhancer and hands the card back (the next image takes ~20 s longer while it reloads the models). If you have a second GPU with 8 GB or more, set `LLM_GPU=1` in `.env`: the enhancer stays loaded on it and works in parallel with image generation.
 
-## Uso diario
+## Daily use
 
 ```bash
-docker compose up -d          # iniciar (si Docker Desktop no arranca solo con Windows)
-docker compose down           # detener
-docker compose logs -f app    # ver qué está pasando
+docker compose up -d          # start (if Docker Desktop doesn't start with Windows)
+docker compose down           # stop
+docker compose logs -f app    # see what's going on
 ```
 
-Para que arranque solo al encender la PC: Docker Desktop → Settings → General → *Start Docker Desktop when you sign in*.
+To start it automatically when your PC boots: Docker Desktop → Settings → General → *Start Docker Desktop when you sign in*.
 
-## Actualizar
+## Updating
 
 ```bash
 git pull
-./setup.sh        # o setup.cmd
+./setup.sh        # or setup.cmd
 ```
 
-## Desinstalar
+## Uninstalling
 
 ```bash
 docker compose down
-docker volume rm qwen_models qwen_llm   # borra los modelos (27 GB)
+docker volume rm qwen_models qwen_llm   # deletes the models (27 GB)
 ```
 
-## Problemas comunes
+## Troubleshooting
 
-- **«Docker no ve ninguna GPU»:** actualiza el driver NVIDIA; en Windows usa Docker Desktop con el backend WSL2; en Linux instala nvidia-container-toolkit y reinicia Docker.
-- **La descarga se cortó:** vuelve a ejecutar el setup; continúa donde quedó.
-- **La PC se pone lenta:** revisa la memoria de WSL2 (arriba) y cierra otras apps pesadas mientras generas.
-- **La primera imagen tarda más:** es la precarga de modelos; el indicador arriba a la derecha dice «Preparando modelos…» hasta que termina.
+- **"Docker can't see any GPU":** update the NVIDIA driver; on Windows use Docker Desktop with the WSL2 backend; on Linux install nvidia-container-toolkit and restart Docker.
+- **The download was interrupted:** run the setup again; it resumes where it stopped.
+- **Your PC gets slow:** check the WSL2 memory setting (above) and close other heavy apps while generating.
+- **The first image takes longer:** that's the model preload; the indicator at the top right shows "Preparing models…" until it's done.
 
-## Licencias y uso responsable
+## Licenses and responsible use
 
-- Qwen-Image-2.1 y sus mejoradores de prompt se distribuyen bajo la **Qwen Research License**: revísala antes de cualquier uso comercial.
-- Las funciones con personas reales (meme, foto grupal) exigen el permiso de quienes aparecen. Las fotos de rostros son datos personales (en Costa Rica, Ley 8968); las imágenes se borran solas tras `RETENTION_HOURS`.
+- Qwen-Image-2.1 and its prompt enhancers are released under the **Qwen Research License**: review it before any commercial use.
+- Features with real people (meme, group photo) require the consent of everyone who appears. Face photos are personal data (in Costa Rica, Law 8968); images are deleted automatically after `RETENTION_HOURS`.
 
-Documentación técnica para agentes y desarrolladores: [`AGENTS.md`](AGENTS.md).
+The app's interface is in Spanish. Technical documentation for agents and developers: [`AGENTS.md`](AGENTS.md).

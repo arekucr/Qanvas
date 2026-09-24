@@ -168,7 +168,7 @@ npm --prefix web run dev             # UI dev at :5173 (proxies /api to :3000)
 1. Docker Desktop autostart (user setting).
 2. Not yet tested by the user: Meme and Group photo with real faces, Mask mode, WebP export.
 3. Security: ComfyUI and llama.cpp now listen only on `127.0.0.1`. `API_KEY` exists in the server but the UI has no field to enter it (it would only work via `localStorage`); it is not in `.env.example`.
-4. No git repo yet: `.gitignore` and `.gitattributes` are ready; only `git init` + first commit remain.
+4. Repo: https://github.com/arekucr/Qanvas (branch `main`). Commit as `Alexander <arekucr@gmail.com>` using `git -c user.name=... -c user.email=...`: the global Git identity is the user's work email, don't use it or change it. Push uses the credentials saved in Git Credential Manager.
 5. Cleanup: the old PE (9.5 GB) and the `int8` encoder (9.35 GB), both unused; the `storage-models` folder on `E:` (~26 GB); the ComfyUI PE custom node, which the app no longer uses.
 6. WhatsApp bot (stage 2 of the plan). Official Cloud API vs Baileys (risk of the number being banned).
 7. The containers `dograh-coqui`, `dograh-parakeet` and `dograh-bonsai` were stopped to free the 3060. They don't restart on their own, and if they are running they compete for GPU and RAM.
