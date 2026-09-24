@@ -1,0 +1,175 @@
+{
+ "t2i": {
+  "file": "t2i.api.json",
+  "params": {
+   "prompt": [
+    [
+     "6",
+     "prompt"
+    ]
+   ],
+   "negative_prompt": [
+    [
+     "6",
+     "negative_prompt"
+    ]
+   ],
+   "width": [
+    [
+     "5",
+     "width"
+    ]
+   ],
+   "height": [
+    [
+     "5",
+     "height"
+    ]
+   ],
+   "seed": [
+    [
+     "7",
+     "seed"
+    ]
+   ],
+   "steps": [
+    [
+     "7",
+     "steps"
+    ]
+   ],
+   "cfg": [
+    [
+     "7",
+     "cfg"
+    ]
+   ]
+  },
+  "output": "9"
+ },
+ "edit": {
+  "file": "edit.api.json",
+  "params": {
+   "prompt": [
+    [
+     "5",
+     "prompt"
+    ]
+   ],
+   "negative_prompt": [
+    [
+     "5",
+     "negative_prompt"
+    ]
+   ],
+   "resolution": [
+    [
+     "5",
+     "resolution"
+    ]
+   ],
+   "seed": [
+    [
+     "6",
+     "seed"
+    ]
+   ],
+   "steps": [
+    [
+     "6",
+     "steps"
+    ]
+   ],
+   "cfg": [
+    [
+     "6",
+     "cfg"
+    ]
+   ]
+  },
+  "imageSlots": [
+   {
+    "node": "11",
+    "encoderInput": "images.image_1"
+   },
+   {
+    "node": "12",
+    "encoderInput": "images.image_2"
+   },
+   {
+    "node": "13",
+    "encoderInput": "images.image_3"
+   },
+   {
+    "node": "14",
+    "encoderInput": "images.image_4"
+   },
+   {
+    "node": "15",
+    "encoderInput": "images.image_5"
+   },
+   {
+    "node": "16",
+    "encoderInput": "images.image_6"
+   },
+   {
+    "node": "17",
+    "encoderInput": "images.image_7"
+   },
+   {
+    "node": "18",
+    "encoderInput": "images.image_8"
+   },
+   {
+    "node": "19",
+    "encoderInput": "images.image_9"
+   },
+   {
+    "node": "20",
+    "encoderInput": "images.image_10"
+   }
+  ],
+  "encoderNode": "5",
+  "output": "8"
+ },
+ "ratios": {
+  "1:1": [
+   2048,
+   2048
+  ],
+  "4:3": [
+   2400,
+   1792
+  ],
+  "3:4": [
+   1792,
+   2400
+  ],
+  "3:2": [
+   2528,
+   1696
+  ],
+  "2:3": [
+   1696,
+   2528
+  ],
+  "16:9": [
+   2752,
+   1536
+  ],
+  "9:16": [
+   1536,
+   2752
+  ]
+ },
+ "upscale": {
+  "file": "upscale.api.json",
+  "params": {},
+  "imageSlots": [
+   {
+    "node": "2"
+   }
+  ],
+  "output": "4"
+ }
+}

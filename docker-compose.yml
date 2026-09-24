@@ -1,0 +1,102 @@
+# Qanvas. First install: `setup.cmd` (Windows) or `./setup.sh` (Linux/WSL). Settings: `.env` (see .env.example).
+services:
+  comfyui:
+    build: .
+    image: qwen-comfyui:cu128-slim-0.37
+    container_name: comfyui-qwen
+    restart: unless-stopped
+    environment:
+      # Docker Desktop exposes every GPU even when one is requested; CUDA_VISIBLE_DEVICES does the isolation.
+      - CUDA_VISIBLE_DEVICES=${COMFY_GPU:-0}
+      # Pinned memory locks ~14 GB of RAM and hung WSL2 VMs with 20 GB; enable it only with plenty of RAM.
+      - CLI_ARGS=${COMFY_ARGS:---disable-pinned-memory}
+    ports:
+      - "127.0.0.1:8188:8188"
+    volumes:
+      - ./storage-cache/dot-cache:/root/.cache
+      - ./storage-cache/dot-config:/root/.config
+      - ./storage-nodes/dot-local:/root/.local
+      - ./storage-nodes/custom_nodes:/root/ComfyUI/custom_nodes
+      # Named volume (fast ext4 on WSL2): models on a Windows bind mount load ~10x slower.
+      - qwen_models:/root/ComfyUI/models
+      - ./storage-user/input:/root/ComfyUI/input
+      - ./storage-user/output:/root/ComfyUI/output
+      - ./storage-user/user-profile:/root/ComfyUI/user
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Prompt enhancers PE-T2I / PE-I2I (GGUF Q4_K_M) in llama.cpp router mode: they swap on demand.
+  # Same GPU as ComfyUI by default (they take turns); set LLM_GPU to a second card to run both at once.
+  llm:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:52192a23c7b258044463aebba78826cdff39a7393b713edc313324b343a7b836
+    container_name: qwen-pe
+    restart: unless-stopped
+    environment:
+      - CUDA_VISIBLE_DEVICES=${LLM_GPU:-0}
+    ports:
+      - "127.0.0.1:8189:8080"
+    volumes:
+      - qwen_llm:/models
+      - ./llm/presets.ini:/config/presets.ini:ro
+    command: >
+      --models-preset /config/presets.ini --models-max 1
+      --host 0.0.0.0 --port 8080
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # API + web (the built UI is served on the same port). Pre-loads the models on startup.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    image: qwen-studio-app
+    container_name: qwen-studio
+    restart: unless-stopped
+    depends_on:
+      - comfyui
+      - llm
+    environment:
+      - COMFY_URL=http://comfyui:8188
+      - LLM_URL=http://llm:8080
+      - COMFY_GPU=${COMFY_GPU:-0}
+      - LLM_GPU=${LLM_GPU:-0}
+      - API_KEY=${API_KEY:-}
+      - RETENTION_HOURS=${RETENTION_HOURS:-24}
+      - COMFY_INPUT_DIR=/comfy/input
+      - COMFY_OUTPUT_DIR=/comfy/output
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - qwen_data:/data
+      - ./workflows:/app/workflows:ro
+      # ComfyUI's copies of each job's images, deleted together with the job (history and retention).
+      - ./storage-user/input:/comfy/input
+      - ./storage-user/output:/comfy/output
+
+  # One-off model download (~27 GB, resumable): `docker compose --profile setup run --rm models`.
+  models:
+    image: curlimages/curl@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+    profiles: [setup]
+    user: "0"
+    entrypoint: ["sh", "/scripts/download-models.sh"]
+    volumes:
+      - qwen_models:/models/comfy
+      - qwen_llm:/models/llm
+      - ./scripts:/scripts:ro
+
+volumes:
+  qwen_models:
+    name: qwen_models
+  qwen_llm:
+    name: qwen_llm
+  qwen_data:

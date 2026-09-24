@@ -1,0 +1,40 @@
+{
+ "1": {
+  "class_type": "UpscaleModelLoader",
+  "inputs": {
+   "model_name": "RealESRGAN_x2plus.pth"
+  }
+ },
+ "2": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "placeholder.png"
+  }
+ },
+ "3": {
+  "class_type": "ImageUpscaleWithModel",
+  "inputs": {
+   "upscale_model": [
+    "1",
+    0
+   ],
+   "image": [
+    "2",
+    0
+   ]
+  }
+ },
+ "4": {
+  "class_type": "SaveImageAdvanced",
+  "inputs": {
+   "images": [
+    "3",
+    0
+   ],
+   "filename_prefix": "qwen21_upscale",
+   "format": "png",
+   "format.bit_depth": "8-bit",
+   "format.input_color_space": "sRGB"
+  }
+ }
+}

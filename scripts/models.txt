@@ -1,0 +1,9 @@
+# Models Qanvas needs: destination (inside the Docker volumes) | exact size in bytes | source URL.
+# comfy/ -> volume qwen_models (ComfyUI models folder) · llm/ -> volume qwen_llm (llama.cpp)
+comfy/diffusion_models/qwen_image_2.1_int8_convrot.safetensors|7256783064|https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/diffusion_models/qwen_image_2.1_int8_convrot.safetensors
+comfy/text_encoders/qwen3vl_8b_w4a8.safetensors|6312105364|https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3vl_8b_w4a8.safetensors
+comfy/vae/qwen_image_2.1_vae_bf16.safetensors|675509688|https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors
+comfy/upscale_models/RealESRGAN_x2plus.pth|67061725|https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.1/RealESRGAN_x2plus.pth
+llm/pe-t2i-Q4_K_M.gguf|5629108864|https://huggingface.co/prithivMLmods/Qwen-Image-2.1-PE-T2I-GGUF/resolve/main/Qwen-Image-2.1-PE-T2I.Q4_K_M.gguf
+llm/pe-i2i-Q4_K_M.gguf|5629108864|https://huggingface.co/prithivMLmods/Qwen-Image-2.1-PE-I2I-GGUF/resolve/main/Qwen-Image-2.1-PE-I2I.Q4_K_M.gguf
+llm/pe-i2i-mmproj-bf16.gguf|921704608|https://huggingface.co/prithivMLmods/Qwen-Image-2.1-PE-I2I-GGUF/resolve/main/Qwen-Image-2.1-PE-I2I.mmproj-bf16.gguf

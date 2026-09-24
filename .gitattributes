@@ -1,0 +1,6 @@
+# Scripts and files read inside Linux containers must keep LF line endings on Windows checkouts.
+*.sh text eol=lf
+scripts/models.txt text eol=lf
+llm/presets.ini text eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
