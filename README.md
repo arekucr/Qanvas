@@ -12,7 +12,7 @@ A local studio to generate and edit images with AI on top of **Qwen-Image-2.1**:
 |---|---|
 | GPU | NVIDIA with **12 GB of VRAM** (tested on an RTX 3060) and a recent driver |
 | RAM | 32 GB |
-| Disk | ~45 GB free (27 GB of models + Docker images) |
+| Disk | ~40 GB free (21 GB of models + Docker images) |
 | Software | **Windows:** Docker Desktop with WSL2 · **Linux:** Docker + Compose v2 + [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
 
 ## Installation (one command)
@@ -24,7 +24,7 @@ git clone https://github.com/arekucr/Qanvas.git && cd Qanvas
 - **Windows:** double-click `setup.cmd` (or run it from a terminal).
 - **Linux / WSL:** `./setup.sh`
 
-The setup checks Docker and the GPU, creates `.env`, downloads the models (~27 GB, can be interrupted and resumed), builds the images, starts everything and waits until the models are preloaded. When it finishes it opens **http://localhost:3000**.
+The setup checks Docker and the GPU, creates `.env`, downloads the models (~21 GB, can be interrupted and resumed), builds the images, starts everything and waits until the models are preloaded. When it finishes it opens **http://localhost:3000**.
 
 You can run it again at any time: it skips whatever is already done.
 
@@ -76,7 +76,7 @@ git pull
 
 ```bash
 docker compose down
-docker volume rm qwen_models qwen_llm   # deletes the models (27 GB)
+docker volume rm qwen_models qwen_llm   # deletes the models (21 GB)
 ```
 
 ## Troubleshooting

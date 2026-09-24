@@ -32,7 +32,7 @@ if (-not (Test-Path "$env:USERPROFILE\.wslconfig")) {
   Write-Host "   Consejo: con $ramGb GB de RAM, crea $env:USERPROFILE\.wslconfig con [wsl2] memory=20GB (ver README)." -ForegroundColor Yellow
 }
 
-Step 'Descargando modelos (~27 GB la primera vez; si se corta, vuelve a correr el setup y continua)'
+Step 'Descargando modelos (~21 GB la primera vez; si se corta, vuelve a correr el setup y continua)'
 & docker compose --profile setup run --rm models
 if ($LASTEXITCODE -ne 0) { Fail 'No se pudieron descargar todos los modelos. Revisa tu conexion y vuelve a ejecutar el setup.' }
 

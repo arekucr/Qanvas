@@ -3,9 +3,7 @@ import { Undo2Icon, WandSparklesIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { EnhanceModeToggle } from '@/components/enhance-mode-toggle'
 import { JobStatus } from '@/components/job-status'
-import { useEnhanceMode } from '@/hooks/use-enhance-mode'
 import type { Job } from '@/lib/api'
 
 interface EnhancedPromptFieldProps {
@@ -30,11 +28,11 @@ export function EnhancedPromptField({
   const enhanced = raw !== null
   // Preparing the images takes a moment before the job exists; block double clicks meanwhile.
   const [preparing, setPreparing] = useState(false)
-  const { fast, setFast } = useEnhanceMode()
   const busy = preparing || enhancer.busy
   const start = async () => {
     setPreparing(true)
-    try { await onEnhance(fast) } finally { setPreparing(false) }
+    // Photo pages always use fast mode: with images, the detailed reasoning takes minutes.
+    try { await onEnhance(true) } finally { setPreparing(false) }
   }
   return (
     <div className='flex flex-col gap-1.5'>
@@ -52,7 +50,7 @@ export function EnhancedPromptField({
             size='xs'
             disabled={!canEnhance || busy}
             onClick={start}
-            title={canEnhance ? `Reescribe la instrucción mirando las imágenes (${fast ? '~30 s' : '1–3 min'})` : enhanceHint}
+            title={canEnhance ? 'Reescribe la instrucción mirando las imágenes (~30 s)' : enhanceHint}
           >
             <WandSparklesIcon /> Mejorar prompt
           </Button>
@@ -76,7 +74,6 @@ export function EnhancedPromptField({
               ? '«Mejorar prompt» mira las imágenes y reescribe la instrucción en inglés detallado.'
               : enhanceHint}
         </span>
-        <EnhanceModeToggle fast={fast} onChange={setFast} disabled={busy} />
       </div>
       <JobStatus job={enhancer.job} onCancel={enhancer.cancel} />
     </div>

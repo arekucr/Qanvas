@@ -83,7 +83,7 @@ services:
       - ./storage-user/input:/comfy/input
       - ./storage-user/output:/comfy/output
 
-  # One-off model download (~27 GB, resumable): `docker compose --profile setup run --rm models`.
+  # One-off model download (~21 GB, resumable): `docker compose --profile setup run --rm models`.
   models:
     image: curlimages/curl@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
     profiles: [setup]

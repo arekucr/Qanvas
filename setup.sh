@@ -25,7 +25,7 @@ if [ "$(echo "$gpus" | wc -l)" -ge 2 ] && ! grep -qE '^LLM_GPU=[1-9]' .env; then
   warn 'Tienes más de una GPU: pon LLM_GPU=1 en .env para dedicar la segunda al mejorador de prompts.'
 fi
 
-step 'Descargando modelos (~27 GB la primera vez; si se corta, vuelve a correr el setup y continúa)'
+step 'Descargando modelos (~21 GB la primera vez; si se corta, vuelve a correr el setup y continúa)'
 docker compose --profile setup run --rm models || fail 'No se pudieron descargar todos los modelos. Revisa tu conexión y vuelve a ejecutar el setup.'
 
 step 'Construyendo las imágenes'

@@ -2,8 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { config } from './config.js'
 
-// Model names are the section names in llm/presets.ini (llama.cpp router mode).
-export const MODELS = { t2i: 'pe-t2i', edit: 'pe-i2i' }
+// Model names are the section names in llm/presets.ini (llama.cpp router mode). PE-I2I also writes good
+// text-to-image prompts, and PE-T2I + PE-I2I don't fit together on an 8 GB card: using one model for both
+// tasks avoids a 10–90 s model swap every time the user switches between Generate and the photo pages.
+export const MODELS = { t2i: 'pe-i2i', edit: 'pe-i2i' }
 
 // llama.cpp randomizes the image placeholder per model instance (and the router restarts the
 // instance on every swap), so read it right before each multimodal request.
@@ -21,11 +23,15 @@ function systemPrompt(task) {
   return systemPrompts[task]
 }
 
+// Both system prompts ask for a JSON object that starts with this key.
+const ANSWER_PREFIX = '{"rewritten_prompt": "'
+
 // Same ChatML the ComfyUI PE node sends; the model opens its own <think> block. In fast mode we
-// pre-fill an empty <think></think> (Qwen's no-thinking convention) so it answers with the JSON directly.
+// pre-fill an empty <think></think> *and* the start of the JSON: PE-I2I ignores the empty think
+// block alone and keeps reasoning in plain text until it runs out of tokens.
 const chatPrompt = (system, user, fast = false) =>
   `<|im_start|>system\n${system}<|im_end|>\n<|im_start|>user\n${user}<|im_end|>\n<|im_start|>assistant\n` +
-  (fast ? '<think>\n\n</think>\n\n' : '')
+  (fast ? `<think>\n\n</think>\n\n${ANSWER_PREFIX}` : '')
 
 // Without reasoning the answer is just the JSON, so a small cap is enough.
 const FAST_MAX_TOKENS = 1536
@@ -93,9 +99,9 @@ export async function primeCache() {
 }
 
 // Resolves with { answer: { positive_prompt, wh_ratio }, timings } (timings as reported by llama.cpp).
-async function streamAnswer(res, onToken) {
+async function streamAnswer(res, onToken, prefix = '') {
   let timings = null
-  let raw = ''
+  let raw = prefix
   let tokens = 0
   let buffer = ''
   const decoder = new TextDecoder()
@@ -131,7 +137,7 @@ export async function enhanceT2I(prompt, { seed = 42, fast = false, signal, onTo
     cache_prompt: true,
     stream: true,
   }, signal)
-  return streamAnswer(res, onToken)
+  return streamAnswer(res, onToken, fast ? ANSWER_PREFIX : '')
 }
 
 // Edit: the model sees the images as <image1>, <image2>… like the ComfyUI PE-I2I node.
@@ -149,5 +155,5 @@ export async function enhanceEdit(prompt, images, { seed = 42, fast = false, sig
     cache_prompt: true,
     stream: true,
   }, signal)
-  return streamAnswer(res, onToken)
+  return streamAnswer(res, onToken, fast ? ANSWER_PREFIX : '')
 }

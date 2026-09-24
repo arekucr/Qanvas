@@ -75,7 +75,7 @@ function useStatus(): Status | null {
   if (!health) return null
   if (!health.comfy) return { tone: 'destructive', text: 'ComfyUI sin conexión', detail: 'El generador no responde' }
   if (!health.warm.comfy) return { tone: 'warning', text: 'Preparando modelos…', detail: 'Cargando Qwen-Image 2.1', pulse: true }
-  if (!health.llm) return { tone: 'warning', text: 'GPU lista', detail: 'Mejorador de prompts sin conexión' }
+  if (!health.llm) return { tone: 'warning', text: 'Mejorador sin conexión', detail: 'Mejorador de prompts sin conexión' }
   return { tone: 'success', text: 'GPU lista', detail: 'Qwen-Image 2.1 · mejorador listo' }
 }
 
@@ -98,18 +98,16 @@ function StatusPill({ status }: { status: Status | null }) {
 
 function StatusCard({ status }: { status: Status | null }) {
   return (
-    <div className='flex items-center gap-3 rounded-2xl border border-sidebar-border bg-card p-3 shadow-card'>
+    <div className='flex items-center gap-3 rounded-2xl border border-sidebar-border bg-card p-3 shadow-card' title={status?.detail}>
       <span className='flex size-10 shrink-0 items-center justify-center rounded-full bg-accent'>
         <Mascot size={32} />
       </span>
       <div className='flex min-w-0 flex-col'>
         <span className='text-sm font-semibold'>{APP_NAME} AI</span>
-        {status && (
-          <span className='flex items-center gap-1.5 truncate text-xs text-muted-foreground'>
-            <span className={cn('size-1.5 shrink-0 rounded-full', TONE_DOT[status.tone], status.pulse && 'animate-pulse')} aria-hidden />
-            {status.detail}
-          </span>
-        )}
+        <span className='flex items-center gap-1.5 truncate text-xs text-muted-foreground'>
+          <span className={cn('size-1.5 shrink-0 rounded-full', TONE_DOT[status?.tone ?? 'warning'], status?.pulse && 'animate-pulse')} aria-hidden />
+          Model: Qwen Image 2.1
+        </span>
       </div>
     </div>
   )

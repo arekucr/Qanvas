@@ -54,8 +54,8 @@ All containers live in `docker-compose.yml` (project root). They talk over the C
 | `qwen3vl_8b_int8_convrot.safetensors` | 9.35 GB | `qwen_models/text_encoders` | **Unused**: w4a8 gave practically identical results (including text) at the same seed. Can be deleted |
 | `qwen_image_2.1_vae_bf16.safetensors` | 0.7 GB | `qwen_models/vae` | VAE |
 | `qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors` | 9.5 GB | `qwen_models/text_encoders` | **Unused** (PE through ComfyUI ran at ~0.8 tok/s). Can be deleted |
-| `pe-t2i-Q4_K_M.gguf` | 5.6 GB | `qwen_llm` | T2I enhancer (prithivMLmods/Qwen-Image-2.1-PE-T2I-GGUF); `pe-t2i` in the router; the app primes it at startup only with a dedicated GPU |
-| `pe-i2i-Q4_K_M.gguf` + `pe-i2i-mmproj-bf16.gguf` | 5.6 + 0.9 GB | `qwen_llm` | Edit enhancer with vision (prithivMLmods/Qwen-Image-2.1-PE-I2I-GGUF); `pe-i2i` in the router. It doesn't fit alongside pe-t2i: the router swaps them (~40 s) |
+| `pe-t2i-Q4_K_M.gguf` | 5.6 GB | `qwen_llm` | **Unused** (removed from `presets.ini` and `models.txt`). Can be deleted from the volume |
+| `pe-i2i-Q4_K_M.gguf` + `pe-i2i-mmproj-bf16.gguf` | 5.6 + 0.9 GB | `qwen_llm` | **Single enhancer** (prithivMLmods/Qwen-Image-2.1-PE-I2I-GGUF) for text **and** photo prompts. Tested: it writes good T2I prompts with the T2I system prompt. Having only one avoids model swaps on the 1070 (they took 10–95 s) |
 | `RealESRGAN_x2plus.pth` | 64 MB | `qwen_models/upscale_models` | 2x upscaler (official xinntao/Real-ESRGAN v0.2.1 release, BSD). ~8 s from 1024 to 2048 |
 
 - Sources: `Comfy-Org/Qwen-Image-2.1` (safetensors), `prithivMLmods/Qwen-Image-2.1-PE-T2I-GGUF`.
@@ -82,11 +82,11 @@ storage-*/           ComfyUI bind mounts (custom_nodes, cache, input/output)
 - `index.js`: Fastify routes, optional API key (`API_KEY`, `x-api-key` header or `?key=`), serves `web/dist` when present, and starts the warm-up.
 - `queue.js`: **two lanes, one per GPU** (`comfy`, `llm`), each serial. `runExclusive()` runs internal tasks (warm-up) ahead of queued jobs. Job cancel: `/interrupt` for ComfyUI, `AbortController` for llama.cpp. It keeps each job's `phase` in memory (`uploading`, `waiting`, `loading`, `images`, `encoding`, `sampling`, `decoding`, `saving`, `thinking`), taken from ComfyUI's `execution_start`/`executing` events. The API includes it in `phase` and the UI shows it. **Don't send prompts straight to ComfyUI while the app is in use**: the app wouldn't see them, and its jobs would sit in "Esperando la GPU".
 - `comfy.js`: ComfyUI client (`/upload/image`, `/prompt`, `/ws` for progress, `/history`, `/view`, `/interrupt`).
-- `llm.js`: llama.cpp client (`/completion` streaming, `model` field = router preset). **The image marker is random per model instance**: it is read from `GET /props?model=pe-i2i` → `media_marker` before each multimodal request (a hardcoded `<__media__>` fails with "Failed to tokenize prompt"). Edit: user text `<image1> MARKER <image2> MARKER … prompt`, presence_penalty 0. **Fast mode** (`fast: true`, the UI default "Rápido"): pre-fills an empty `<think>
+- `llm.js`: llama.cpp client (`/completion` streaming, `model` field = router preset). **The image marker is random per model instance**: it is read from `GET /props?model=pe-i2i` → `media_marker` before each multimodal request (a hardcoded `<__media__>` fails with "Failed to tokenize prompt"). Edit: user text `<image1> MARKER <image2> MARKER … prompt`, presence_penalty 0. **Fast mode** (`fast: true`, the UI default "Rápido"): pre-fills `<think>
 
 </think>
 
-` in the assistant turn so it writes the JSON without reasoning (cap 1536 tokens). "Detallado" = original reasoning (1–3 min). The choice is saved in `localStorage` (`useEnhanceMode`). It builds the same ChatML as the PE node, `<|im_start|>assistant\n` with no `<think>` prefix, and uses temp 1.0, top_k 20, top_p 0.95, presence_penalty 1.5. It parses the JSON after `</think>` → `{ positive_prompt, wh_ratio }`.
+{"rewritten_prompt": "` in the assistant turn and prepends it again before parsing. The JSON start is required: with the empty think alone, PE-I2I keeps reasoning in plain text until it hits the limit (cap 1536 tokens). **Photo pages always use fast mode** (the detailed one with images reasons for ~4k tokens, ~2.5 min); only Generar offers "Detallado". "Detallado" = original reasoning (1–3 min). The choice is saved in `localStorage` (`useEnhanceMode`). It builds the same ChatML as the PE node, `<|im_start|>assistant\n` with no `<think>` prefix, and uses temp 1.0, top_k 20, top_p 0.95, presence_penalty 1.5. It parses the JSON after `</think>` → `{ positive_prompt, wh_ratio }`.
 - Uploads to ComfyUI are **named by content hash** (sha256): repeating a prompt with the same images reuses ComfyUI's cache (`--cache-ram`, the default) and skips the text encoder. This is the basis of "Otra variante" and "Renderizar final".
 - `workflows.js`: loads the templates and applies params and images according to the manifest. Unused image slots are removed from the graph.
 - `presets.js`: turns each job type into a workflow and params, validates consent and image counts, and applies a basic content filter.
@@ -157,7 +157,7 @@ npm --prefix web run dev             # UI dev at :5173 (proxies /api to :3000)
 
 ## Reference performance (RTX 3060 / GTX 1070)
 - Preview generation (704 px, 12 steps): ~33 s of sampling (~2.7 s/step) plus model loading. Before the warm-up and the RAM fixes, overhead was ~50 s per job.
-- Prompt enhancer: prefill ~500 tok/s (2.4k-token system prompt, cached after warm-up), generation ~25 tok/s, ~1 min per enhancement (~1.2k tokens including `<think>`).
+- Prompt enhancer (1070, measured): generation 25–27 tok/s, prefill ~370–500 tok/s. Fast: text ~22 s (426 tok), photo ~30 s (417 tok + ~4.9k tokens of input). Detailed: text ~50 s (1.1k tok), photo ~3 min (4.2k tok). The WSL2 virtual disk reads at ~174 MB/s cold.
 
 ## Known issues
 - `--use-sage-attention` can produce black/NaN images on Ampere (not used).
